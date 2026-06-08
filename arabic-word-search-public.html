@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لعبة البحث عن الكلمات البغدادية - النسخة العامة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --blue-950: #07153f;
+      --blue-900: #0a1f5c;
+      --blue-800: #123185;
+      --blue-700: #1740aa;
+      --gold-500: #d9a83f;
+      --gold-300: #ffd879;
+      --cream: #fff8df;
+      --cyan: #42e6ff;
+      --green: #37d88f;
+      --rose: #ff668d;
+      --shadow: 0 1.2rem 3rem rgba(1, 8, 32, .35);
+      --grid-size: min(92vw, 62vh, 680px);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      font-family: "Cairo", system-ui, sans-serif;
+      color: var(--cream);
+      background:
+        radial-gradient(circle at 18% 15%, rgba(66, 230, 255, .16), transparent 32%),
+        radial-gradient(circle at 80% 8%, rgba(255, 216, 121, .20), transparent 28%),
+        linear-gradient(145deg, var(--blue-950), var(--blue-900) 44%, #05102f);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      opacity: .26;
+      background-image:
+        linear-gradient(45deg, transparent 47%, rgba(217, 168, 63, .55) 48%, rgba(217, 168, 63, .55) 52%, transparent 53%),
+        linear-gradient(-45deg, transparent 47%, rgba(66, 230, 255, .35) 48%, rgba(66, 230, 255, .35) 52%, transparent 53%);
+      background-size: 7.5vmin 7.5vmin;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.9), transparent 90%);
+      pointer-events: none;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .app {
+      width: min(1180px, 94vw);
+      margin: 0 auto;
+      padding: clamp(14px, 3vmin, 32px) 0;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: clamp(12px, 2.4vmin, 24px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      min-width: 0;
+    }
+
+    .seal {
+      display: grid;
+      place-items: center;
+      width: clamp(42px, 8vmin, 68px);
+      aspect-ratio: 1 / 1;
+      border: 2px solid rgba(255, 216, 121, .85);
+      border-radius: 50%;
+      color: var(--gold-300);
+      background: linear-gradient(135deg, rgba(23, 64, 170, .95), rgba(7, 21, 63, .95));
+      box-shadow: inset 0 0 0 .45rem rgba(217, 168, 63, .08), 0 .7rem 1.5rem rgba(0,0,0,.2);
+      font-size: clamp(1.3rem, 4vmin, 2.1rem);
+      font-weight: 800;
+    }
+
+    h1,
+    h2,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(1.3rem, 3.8vmin, 2.5rem);
+      line-height: 1.2;
+      text-wrap: balance;
+    }
+
+    .subtitle {
+      margin-top: .25rem;
+      color: rgba(255, 248, 223, .76);
+      font-size: clamp(.82rem, 1.8vmin, 1rem);
+    }
+
+    .score-card {
+      min-width: clamp(112px, 20vmin, 150px);
+      padding: .65rem .9rem;
+      border: 1px solid rgba(255, 216, 121, .4);
+      border-radius: 8px;
+      text-align: center;
+      background: rgba(255, 248, 223, .08);
+      box-shadow: 0 .7rem 1.8rem rgba(0,0,0,.14);
+    }
+
+    .score-card span {
+      display: block;
+      color: var(--gold-300);
+      font-size: clamp(1.25rem, 4vmin, 2.1rem);
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .game-shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(230px, 320px);
+      gap: clamp(14px, 3vmin, 28px);
+      align-items: start;
+    }
+
+    .board-wrap {
+      display: grid;
+      place-items: center;
+      min-width: 0;
+    }
+
+    .grid {
+      width: var(--grid-size);
+      max-width: 100%;
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: clamp(3px, .75vmin, 8px);
+      padding: clamp(7px, 1.6vmin, 14px);
+      border: 2px solid rgba(255, 216, 121, .72);
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(18, 49, 133, .96), rgba(8, 24, 72, .96)),
+        repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 1px, transparent 1px 8px);
+      box-shadow: var(--shadow), inset 0 0 0 1px rgba(255,255,255,.09);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .cell {
+      width: 100%;
+      min-width: 0;
+      aspect-ratio: 1 / 1;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255, 216, 121, .32);
+      border-radius: 6px;
+      color: #fffbea;
+      background: linear-gradient(160deg, rgba(25, 73, 185, .96), rgba(6, 18, 64, .86));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.13), 0 .35rem .75rem rgba(0,0,0,.16);
+      cursor: pointer;
+      font-size: clamp(1rem, calc(var(--grid-size) / 22), 2rem);
+      font-weight: 800;
+      line-height: 1;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
+      touch-action: none;
+    }
+
+    .cell.active {
+      transform: translateY(-2px) scale(1.04);
+      border-color: var(--cyan);
+      background: linear-gradient(160deg, rgba(66, 230, 255, .9), rgba(23, 64, 170, .9));
+      box-shadow: 0 0 0 3px rgba(66, 230, 255, .22), 0 .7rem 1rem rgba(0,0,0,.22);
+    }
+
+    .cell.found {
+      color: #062047;
+      border-color: rgba(255, 248, 223, .95);
+      background: linear-gradient(160deg, var(--gold-300), var(--gold-500));
+      box-shadow: 0 0 0 3px rgba(255, 216, 121, .22), inset 0 1px 0 rgba(255,255,255,.35);
+      animation: foundPulse .5s ease;
+    }
+
+    .panel {
+      border: 1px solid rgba(255, 216, 121, .35);
+      border-radius: 8px;
+      background: rgba(3, 12, 43, .56);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-section {
+      padding: clamp(14px, 2.4vmin, 20px);
+      border-bottom: 1px solid rgba(255, 216, 121, .18);
+    }
+
+    .panel-section:last-child {
+      border-bottom: 0;
+    }
+
+    .panel h2 {
+      margin-bottom: .8rem;
+      color: var(--gold-300);
+      font-size: clamp(1rem, 2.5vmin, 1.35rem);
+    }
+
+    .word-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .55rem;
+    }
+
+    .word {
+      padding: .35rem .7rem;
+      border: 1px solid rgba(255, 216, 121, .42);
+      border-radius: 999px;
+      color: rgba(255, 248, 223, .92);
+      background: rgba(255, 248, 223, .07);
+      font-size: clamp(.88rem, 2.1vmin, 1rem);
+      font-weight: 700;
+      transition: opacity .2s ease, transform .2s ease, background .2s ease;
+    }
+
+    .word.done {
+      color: #082052;
+      background: var(--gold-300);
+      opacity: .78;
+      text-decoration: line-through;
+      transform: scale(.96);
+    }
+
+    .status {
+      min-height: 2rem;
+      color: rgba(255, 248, 223, .78);
+      font-size: clamp(.88rem, 2vmin, 1rem);
+    }
+
+    .actions {
+      display: flex;
+      gap: .6rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      min-height: 42px;
+      border: 0;
+      border-radius: 8px;
+      padding: .65rem 1rem;
+      color: #061844;
+      background: linear-gradient(160deg, var(--gold-300), var(--gold-500));
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 .7rem 1.25rem rgba(0,0,0,.18);
+      transition: transform .16s ease, filter .16s ease;
+    }
+
+    .btn:hover {
+      filter: brightness(1.06);
+      transform: translateY(-1px);
+    }
+
+    .btn.secondary {
+      color: var(--cream);
+      border: 1px solid rgba(255, 216, 121, .42);
+      background: rgba(255, 248, 223, .08);
+    }
+
+    .owner-db {
+      display: none;
+      margin-top: .8rem;
+      overflow: auto;
+      max-height: 180px;
+      border: 1px solid rgba(255, 216, 121, .25);
+      border-radius: 8px;
+    }
+
+    .owner-db.visible {
+      display: block;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      color: rgba(255, 248, 223, .9);
+      font-size: .88rem;
+    }
+
+    th,
+    td {
+      padding: .55rem;
+      border-bottom: 1px solid rgba(255, 216, 121, .15);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th {
+      color: var(--gold-300);
+      background: rgba(255, 216, 121, .08);
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      padding: 1rem;
+      background: rgba(1, 8, 32, .78);
+      backdrop-filter: blur(14px);
+    }
+
+    .modal.hidden {
+      display: none;
+    }
+
+    .dialog {
+      width: min(480px, 94vw);
+      padding: clamp(20px, 4vmin, 34px);
+      border: 1px solid rgba(255, 216, 121, .6);
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(18, 49, 133, .96), rgba(5, 16, 47, .96));
+      box-shadow: 0 2rem 5rem rgba(0,0,0,.45);
+    }
+
+    .dialog h2 {
+      margin-bottom: .65rem;
+      color: var(--gold-300);
+      font-size: clamp(1.45rem, 5vmin, 2.2rem);
+    }
+
+    .dialog p {
+      color: rgba(255, 248, 223, .78);
+      margin-bottom: 1.15rem;
+    }
+
+    .input-row {
+      display: grid;
+      gap: .7rem;
+    }
+
+    input {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid rgba(255, 216, 121, .48);
+      border-radius: 8px;
+      padding: .75rem .9rem;
+      color: var(--cream);
+      background: rgba(255, 248, 223, .08);
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(66, 230, 255, .16);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 1rem;
+      left: 50%;
+      z-index: 20;
+      padding: .7rem 1rem;
+      border: 1px solid rgba(255, 216, 121, .45);
+      border-radius: 8px;
+      color: #062047;
+      background: var(--gold-300);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translate(-50%, 1rem);
+      pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    @keyframes foundPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+
+    @media (max-width: 860px) {
+      :root {
+        --grid-size: min(94vw, 58vh);
+      }
+
+      .topbar {
+        align-items: flex-start;
+      }
+
+      .game-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .app {
+        width: min(96vw, 720px);
+        padding-top: 10px;
+      }
+
+      .topbar {
+        gap: .65rem;
+      }
+
+      .brand {
+        gap: .55rem;
+      }
+
+      .score-card {
+        min-width: 86px;
+        padding: .5rem .55rem;
+      }
+
+      .grid {
+        gap: 3px;
+        padding: 6px;
+      }
+
+      .cell {
+        border-radius: 5px;
+        font-size: clamp(.85rem, 5.2vw, 1.35rem);
+      }
+
+      .panel-section {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" aria-live="polite">
+    <header class="topbar">
+      <div class="brand">
+        <div class="seal" aria-hidden="true">𒀭</div>
+        <div>
+          <h1>البحث عن الكلمات البغدادية</h1>
+          <p class="subtitle">اجمع الكلمات المخفية في بوابة زرقاء بتفاصيل ذهبية</p>
+        </div>
+      </div>
+      <div class="score-card">
+        النقاط
+        <span id="score">0</span>
+      </div>
+    </header>
+
+    <section class="game-shell">
+      <div class="board-wrap">
+        <div id="grid" class="grid" aria-label="شبكة حروف لعبة البحث عن الكلمات"></div>
+      </div>
+
+      <aside class="panel">
+        <section class="panel-section">
+          <h2>الكلمات</h2>
+          <div id="wordList" class="word-list"></div>
+        </section>
+        <section class="panel-section">
+          <h2>اللاعب</h2>
+          <p id="playerName" class="status">لم تبدأ اللعبة بعد</p>
+        </section>
+        <section class="panel-section">
+          <h2>الحالة</h2>
+          <p id="status" class="status">ابدأ اللعب ثم اسحب فوق الحروف لتكوين كلمة.</p>
+        </section>
+        <section class="panel-section">
+          <div class="actions">
+            <button id="restartBtn" class="btn secondary" type="button">إعادة اللعب</button>
+          </div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <section id="welcomeModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+    <form id="nameForm" class="dialog">
+      <h2 id="welcomeTitle">أهلاً بك</h2>
+      <p>اكتب اسم المستخدم لبدء اللعبة.</p>
+      <div class="input-row">
+        <input id="usernameInput" type="text" autocomplete="name" maxlength="24" placeholder="اسم المستخدم" required />
+        <button class="btn" type="submit">ابدأ اللعب</button>
+      </div>
+    </form>
+  </section>
+
+  <section id="finishModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="finishTitle">
+    <div class="dialog">
+      <h2 id="finishTitle">أحسنت!</h2>
+      <p id="finishText">أنهيت اللعبة.</p>
+      <button id="playAgainBtn" class="btn" type="button">العب مرة أخرى</button>
+    </div>
+  </section>
+
+  <div id="toast" class="toast">تم العثور على كلمة!</div>
+
+  <script>
+    /*
+      Single-file Arabic word search game.
+      Public version: sends finished player results to the shared local server.
+    */
+
+    const WORDS = ["بخت", "اغاتي", "بغداد", "تنور", "طرمة", "كليجة", "جرباية", "دربونة", "نخل", "استكان"];
+    const API_URL = `${window.location.origin}/api/players`;
+
+    const GRID_SIZE = 10;
+    const ARABIC_FILLERS = ["ا", "ب", "ت", "ج", "د", "ر", "ز", "س", "ش", "ط", "ع", "غ", "ف", "ق", "ك", "ل", "م", "ن", "ه", "و", "ي", "خ"];
+    const DIRECTIONS = [
+      { row: 0, col: 1 },
+      { row: 1, col: 0 },
+      { row: 1, col: 1 },
+      { row: -1, col: 1 }
+    ];
+
+    const gridEl = document.getElementById("grid");
+    const wordListEl = document.getElementById("wordList");
+    const scoreEl = document.getElementById("score");
+    const statusEl = document.getElementById("status");
+    const playerNameEl = document.getElementById("playerName");
+    const welcomeModal = document.getElementById("welcomeModal");
+    const finishModal = document.getElementById("finishModal");
+    const finishText = document.getElementById("finishText");
+    const nameForm = document.getElementById("nameForm");
+    const usernameInput = document.getElementById("usernameInput");
+    const playAgainBtn = document.getElementById("playAgainBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const toast = document.getElementById("toast");
+
+    let grid = [];
+    let placements = [];
+    let selectedCells = [];
+    let foundWords = new Set();
+    let score = 0;
+    let player = "";
+    let isSelecting = false;
+    let hasSavedResult = false;
+
+    function createEmptyGrid() {
+      return Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(""));
+    }
+
+    function canPlace(word, row, col, direction) {
+      return [...word].every((letter, index) => {
+        const nextRow = row + direction.row * index;
+        const nextCol = col + direction.col * index;
+        const inBounds = nextRow >= 0 && nextRow < GRID_SIZE && nextCol >= 0 && nextCol < GRID_SIZE;
+        return inBounds && (grid[nextRow][nextCol] === "" || grid[nextRow][nextCol] === letter);
+      });
+    }
+
+    function placeWord(word) {
+      const letters = [...word];
+      for (let attempt = 0; attempt < 300; attempt++) {
+        const direction = DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)];
+        const row = Math.floor(Math.random() * GRID_SIZE);
+        const col = Math.floor(Math.random() * GRID_SIZE);
+
+        if (!canPlace(word, row, col, direction)) continue;
+
+        const cells = letters.map((letter, index) => {
+          const nextRow = row + direction.row * index;
+          const nextCol = col + direction.col * index;
+          grid[nextRow][nextCol] = letter;
+          return `${nextRow}-${nextCol}`;
+        });
+
+        placements.push({ word, cells });
+        return true;
+      }
+      return false;
+    }
+
+    function fillGrid() {
+      for (let row = 0; row < GRID_SIZE; row++) {
+        for (let col = 0; col < GRID_SIZE; col++) {
+          if (!grid[row][col]) {
+            grid[row][col] = ARABIC_FILLERS[Math.floor(Math.random() * ARABIC_FILLERS.length)];
+          }
+        }
+      }
+    }
+
+    function buildPuzzle() {
+      grid = createEmptyGrid();
+      placements = [];
+      [...WORDS]
+        .sort((a, b) => b.length - a.length)
+        .forEach(placeWord);
+      fillGrid();
+    }
+
+    function renderGrid() {
+      gridEl.innerHTML = "";
+      grid.forEach((row, rowIndex) => {
+        row.forEach((letter, colIndex) => {
+          const cell = document.createElement("button");
+          cell.type = "button";
+          cell.className = "cell";
+          cell.textContent = letter;
+          cell.dataset.row = rowIndex;
+          cell.dataset.col = colIndex;
+          cell.dataset.key = `${rowIndex}-${colIndex}`;
+          cell.setAttribute("aria-label", `حرف ${letter}`);
+          gridEl.appendChild(cell);
+        });
+      });
+    }
+
+    function renderWords() {
+      wordListEl.innerHTML = "";
+      WORDS.forEach(word => {
+        const item = document.createElement("span");
+        item.className = `word ${foundWords.has(word) ? "done" : ""}`;
+        item.dataset.word = word;
+        item.textContent = word;
+        wordListEl.appendChild(item);
+      });
+    }
+
+    function clearSelection() {
+      selectedCells.forEach(cell => cell.classList.remove("active"));
+      selectedCells = [];
+    }
+
+    function addCellToSelection(cell) {
+      if (!cell || !cell.classList.contains("cell")) return;
+      if (selectedCells.includes(cell)) return;
+      selectedCells.push(cell);
+      cell.classList.add("active");
+    }
+
+    function getCellFromPointer(event) {
+      const point = event.touches ? event.touches[0] : event;
+      const element = document.elementFromPoint(point.clientX, point.clientY);
+      return element && element.closest(".cell");
+    }
+
+    function normalizeKeys(cells) {
+      return cells.map(cell => cell.dataset.key);
+    }
+
+    function checkSelection() {
+      const selectedKeys = normalizeKeys(selectedCells);
+      const selectedText = selectedCells.map(cell => cell.textContent).join("");
+      const reversedText = [...selectedText].reverse().join("");
+
+      const match = placements.find(placement => {
+        if (foundWords.has(placement.word)) return false;
+        const forward = placement.cells.join("|") === selectedKeys.join("|");
+        const reverse = placement.cells.slice().reverse().join("|") === selectedKeys.join("|");
+        return forward || reverse || selectedText === placement.word || reversedText === placement.word;
+      });
+
+      if (!match) {
+        clearSelection();
+        statusEl.textContent = selectedText ? `المحاولة: ${selectedText}` : "اسحب فوق الحروف لتكوين كلمة.";
+        return;
+      }
+
+      foundWords.add(match.word);
+      score += 1;
+      scoreEl.textContent = score;
+      statusEl.textContent = `وجدت كلمة: ${match.word}`;
+
+      selectedCells.forEach(cell => {
+        cell.classList.remove("active");
+        cell.classList.add("found");
+      });
+
+      // Keep every already found word highlighted, even if paths cross.
+      placements
+        .filter(placement => foundWords.has(placement.word))
+        .flatMap(placement => placement.cells)
+        .forEach(key => document.querySelector(`[data-key="${key}"]`)?.classList.add("found"));
+
+      renderWords();
+      showToast("تم العثور على كلمة!");
+      selectedCells = [];
+
+      if (foundWords.size === WORDS.length) {
+        finishGame();
+      }
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      window.setTimeout(() => toast.classList.remove("show"), 1300);
+    }
+
+    function startPointerSelection(event) {
+      if (!player) return;
+      event.preventDefault();
+      isSelecting = true;
+      clearSelection();
+      addCellToSelection(getCellFromPointer(event));
+    }
+
+    function movePointerSelection(event) {
+      if (!isSelecting) return;
+      event.preventDefault();
+      addCellToSelection(getCellFromPointer(event));
+    }
+
+    function endPointerSelection(event) {
+      if (!isSelecting) return;
+      event.preventDefault();
+      isSelecting = false;
+      checkSelection();
+    }
+
+    async function saveResult() {
+      if (hasSavedResult) return;
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: player,
+            score,
+            total: WORDS.length
+          })
+        });
+
+        if (!response.ok) throw new Error("Save failed");
+        hasSavedResult = true;
+        showToast("تم حفظ النتيجة");
+      } catch {
+        showToast("تعذر حفظ النتيجة، تأكد من تشغيل السيرفر");
+      }
+    }
+
+    async function finishGame() {
+      await saveResult();
+      finishText.textContent = `${player}، حصلت على ${score} من ${WORDS.length} نقاط.`;
+      finishModal.classList.remove("hidden");
+    }
+
+    function resetGame(keepPlayer = true) {
+      foundWords = new Set();
+      selectedCells = [];
+      score = 0;
+      isSelecting = false;
+      hasSavedResult = false;
+      scoreEl.textContent = "0";
+      statusEl.textContent = "اسحب فوق الحروف لتكوين كلمة.";
+      finishModal.classList.add("hidden");
+      buildPuzzle();
+      renderGrid();
+      renderWords();
+      if (!keepPlayer) {
+        player = "";
+        playerNameEl.textContent = "لم تبدأ اللعبة بعد";
+        welcomeModal.classList.remove("hidden");
+        usernameInput.focus();
+      }
+    }
+
+    nameForm.addEventListener("submit", event => {
+      event.preventDefault();
+      const enteredName = usernameInput.value.trim();
+      if (!enteredName) return;
+      player = enteredName;
+      playerNameEl.textContent = player;
+      welcomeModal.classList.add("hidden");
+      resetGame(true);
+      showToast("بدأت اللعبة!");
+    });
+
+    gridEl.addEventListener("mousedown", startPointerSelection);
+    gridEl.addEventListener("mousemove", movePointerSelection);
+    window.addEventListener("mouseup", endPointerSelection);
+    gridEl.addEventListener("touchstart", startPointerSelection, { passive: false });
+    gridEl.addEventListener("touchmove", movePointerSelection, { passive: false });
+    window.addEventListener("touchend", endPointerSelection, { passive: false });
+
+    playAgainBtn.addEventListener("click", () => resetGame(true));
+    restartBtn.addEventListener("click", () => resetGame(Boolean(player)));
+
+    buildPuzzle();
+    renderGrid();
+    renderWords();
+    usernameInput.focus();
+  </script>
+</body>
+</html>

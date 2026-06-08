@@ -1,0 +1,13 @@
+{
+  "name": "baghdad-arabic-word-search",
+  "version": "1.0.0",
+  "description": "Arabic word search puzzle with public player page and owner results page.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "private": true
+}
